@@ -1,0 +1,92 @@
+[project]
+name = "ekstrakcja"
+version = "0.1.0"
+description = "Web scraping tool for extracting data from websites."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "autogen-agentchat>=0.6.4",
+    "autogen-ext[openai,web-surfer]>=0.6.4",
+    "fastapi>=0.116.1",
+]
+[dependency-groups]
+dev = [
+    "flake8>=7.2.0",
+    "isort>=6.0.1",
+    "mypy>=1.15.0",
+    "poethepoet>=0.35.0",
+    "pydocstyle>=6.3.0",
+    "pydoctor>=25.4.0",
+    "pylint>=3.3.6",
+    "pyright>=1.1.398",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
+    "ruff>=0.12",
+]
+
+[tool.poe.tasks]
+format = [
+    { cmd = "uv run ruff check --select I --fix" },
+    { cmd = "uv run ruff format" },
+]
+lint = [
+    { cmd = "uv run ruff check --select I" },
+    { cmd = "uv run ruff format --check" },
+    { ref = "lint-types" },
+    { cmd = "uv run pyright" },
+    { ref = "lint-docs" },
+]
+lint-docs = "uv run pydocstyle --ignore-decorators=overload"
+lint-types = "uv run mypy --namespace-packages --check-untyped-defs ."
+test = "uv run pytest"
+
+[tool.mypy]
+ignore_missing_imports = true
+check_untyped_defs = true
+namespace_packages = true
+exclude = []
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "strict"
+reportMissingImports = "warning"
+reportMissingTypeStubs = false
+
+[tool.pylint.messages_control]
+disable = [
+    "C0301", # Line too long
+    "E1101", # Module '...' has no '...' member
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto" # Auto-detect asyncio tests
+log_level = "DEBUG" # Set log level to DEBUG
+testpaths = ["tests"] # Directories to search for tests
+python_files = "test_*.py" # Test file pattern
+python_classes = ["Test*"] # Test class pattern
+python_functions = ["test_*"] # Test function pattern
+addopts = [
+    "--verbose",           # Verbose output
+    "--color=yes",         # Colored output
+    "-xvs",                # Exit on first failure, verbose, no capture
+    "--asyncio-mode=auto", # Auto-detect async tests (requires pytest-asyncio)
+]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.pydocstyle]
+convention = "google"
+# https://github.com/PyCQA/pydocstyle/issues/363#issuecomment-625563088
+match_dir = "^(?!(docs|scripts|tests|api|proto|\\.)).*"
+add_ignore = [
+    # We like to wrap at a certain number of chars, even long summary sentences.
+    # https://github.com/PyCQA/pydocstyle/issues/184
+    "D205",
+    "D415",
+]
+
+[tool.pydoctor]
+add-package = "orchestrator"
+docformat = "google"
+
+[tool.ruff]
+target-version = "py313"
